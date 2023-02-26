@@ -19,7 +19,7 @@ plt.rcParams['font.family'] = 'NanumGothic'
 plt.rcParams['figure.figsize'] = (10, 10)
 
 # 작업 경로 설정
-file_path = 'D:/1 lab/2023/5 이준영 선배 논문 작업/'
+file_path = 'file_path/'
 file_path_date = file_path + '0226/' # (***날짜 폴더명 변경 필요***)
 code_save_name = '14499포함' #(*** 변경 필요***)
 
