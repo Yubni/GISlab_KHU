@@ -1,0 +1,91 @@
+# Package Installation
+!pip install nltk
+!pip install --upgrade pip
+!pip install konlpy
+!pip install wordcloud
+!pip install --upgrade gensim
+!pip install matplotlib
+
+import pandas as pd
+
+# 작업 경로 지정
+file_path = 'D:/주거환경학과 실습지/keyword/data/'
+
+# 주택연구(Housing Studies, HS)
+# 국토계획(Journal of Korea Planners Association, JKPA)
+# 부동산학연구(Journal of the Korea Real Estate Analysts Association, JKREAA)
+
+# 1. 데이터 불러오기
+# read excel data
+data_hs = pd.read_excel(file_path + '주택연구, 국토계획0205.xlsx', sheet_name=0) # 첫번째 시트 불러오기
+data_jkpa = pd.read_excel(file_path + '주택연구, 국토계획0205.xlsx', sheet_name=1)
+data_jkre = pd.read_excel(file_path + '부동산분석학회0205.xlsx', sheet_name=2)
+
+# combine title + keyword + abstact
+df_hs = pd.DataFrame() # 빈 데이터프레임 생성
+df_hs['year'] = data_hs['연도'] # 연도 가져오기
+df_hs['words'] = data_hs['제목'] + ' ' + data_hs['키워드'] + ' ' + data_hs['초록'] # 제목 + 키워드 + 초록을 띄어쓰기 구분자로 합치기
+df_hs['words'] = df_hs['words'].str.replace('\n', ' ') # 줄바꿈을 공백으로 대치
+# df_hs['words'] = df_hs['words'].str.replace('  ', ' ') # 이중 띄어쓰기를 띄어쓰기로 대치
+# 단어 통일 작업 필요
+# 참고: df_hs['words'] = df_hs.replace('\n', ' ') # 전체 값이 완벽하게 일치할 때만 대치 가능
+
+
+# 2. 형태소 분리 작업
+from konlpy.tag import Kkma
+kkma = Kkma()
+import nltk # nltk(Natual Language ToolKit)는 자연어 처리에 필요한 툴킷 제공
+from konlpy.tag import Okt; t = Okt() # KoNLPy는 한글 자연어 처리 오픈소스 라이브러리, okt(Open Korean Text)는 한글 형태소 분리하는 모듈
+
+# 워드클라우드 생성을 위해 여러 행을 하나의 문자열로 합치기
+combined_text = ' '.join(df_hs['words'].astype(str)) #df_hs['words']에 있는 값들을 문자열로 합치기 - 이때 각 행 사이를 ' '(공백)으로 구분
+tokens_ko = t.nouns(combined_text) # 단어 추출
+
+ko = nltk.Text(tokens_ko, name = 'keyword analysis') # 텍스트화
+print(len(ko.tokens)) # 토큰(문서 길이)의 수
+print(len(set(ko.tokens))) #고유 토큰의 수
+ko.vocab() # 단어 및 빈도 출력
+# FreqDist({'주택': 2798, '분석': 1393, '가격': 1382, '것': 1292, '연구': 1185, '주거': 956, '영향': 841, '수': 781, '결과': 724, '가구': 711, ...})
+
+
+# 3. 워드 클라우드 생성
+import matplotlib.pyplot as plt
+from matplotlib import font_manager, rc # rc는 글꼴 변경
+font_name = font_manager.FontProperties(fname="c:/Windows/Fonts/malgun.ttf").get_name() # 폰트 변경 가능
+rc('font', family=font_name)
+
+# 빈도 그래프
+plt.figure(figsize=(12,6))
+ko.plot(50) # 최빈 50개 단어 출력
+plt.show()
+
+# 단어 및 빈도 출력
+from nltk import FreqDist
+freq_dist = FreqDist(ko.tokens) #FreqDist 객체 생성
+df_freq_dist = pd.DataFrame(freq_dist.items(), columns=['단어', '빈도']).sort_values(by='빈도', ascending=False) # FreqDist 객체를 데이터프레임으로 변환
+df_freq_dist.to_csv(file_path + 'word_frequency.csv', index=False, encoding='cp949') # CSV 파일로 저장
+
+# 걸러 낼 단어 지정 및 단어 통일 과정 반복
+stop_words = ['것', '수', '및', '위', '등', '이', '비', '의', '그']
+# df_hs['words'] = df_hs['words'].str.replace('\n', ' ') # 참고
+
+ko = [each_word for each_word in ko if each_word not in stop_words] # ko에 포함되지만 stop_words가 아닌 단어
+
+# 빈도 그래프 재생성
+ko = nltk.Text(ko, name='주택연구 초록')
+plt.figure(figsize=(12,6))
+ko.plot(50)
+plt.show()
+
+# 워드 클라우드 생성
+from wordcloud import WordCloud, STOPWORDS
+
+data = ko.vocab().most_common(150) # 워드 클라우드에 나타낼 단어 개수 지정
+wordcloud = WordCloud(font_path='c:/Windows/Fonts/malgun.ttf',
+                     relative_scaling = 0.2,
+                     background_color='white',
+                     ).generate_from_frequencies(dict(data))
+plt.figure(figsize=(12,8))
+plt.imshow(wordcloud)
+plt.axis("off")
+plt.show()
