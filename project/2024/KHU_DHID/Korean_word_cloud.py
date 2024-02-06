@@ -39,7 +39,7 @@ print(len(ko.tokens)) # The length of token
 print(len(set(ko.tokens))) # The number of unique token
 ko.vocab() # Print words and their frequencies
 
-# 3. Generate Word Cloud
+# 3. Frequency analysis
 font_name = font_manager.FontProperties(fname="c:/Windows/Fonts/malgun.ttf").get_name()
 rc('font', family=font_name)
 
@@ -62,7 +62,7 @@ plt.figure(figsize=(12,6))
 ko.plot(50)
 plt.show()
 
-# Generate Word Cloud
+# 4. Generate Word Cloud
 data = ko.vocab().most_common(150)
 wordcloud = WordCloud(font_path='c:/Windows/Fonts/malgun.ttf',
                      relative_scaling = 0.2,
